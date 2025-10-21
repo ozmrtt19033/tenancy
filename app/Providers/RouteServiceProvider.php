@@ -10,26 +10,49 @@ use Illuminate\Support\Facades\Route;
 
 class RouteServiceProvider extends ServiceProvider
 {
-    public const HOME = '/home';
+    /**
+     * The path to the "home" route for your application.
+     */
+    public const HOME = '/';
 
-    public function boot()
+    /**
+     * Define your route model bindings, pattern filters, and other route configuration.
+     */
+    public function boot(): void
     {
         $this->configureRateLimiting();
 
         $this->routes(function () {
+            // API routes
             Route::middleware('api')
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
 
-            Route::middleware('web')
-                ->group(base_path('routes/web.php'));
-
-            // Tenant Routes - Tenancy paketi bunu otomatik yükleyecek
-            // Manuel eklemeye gerek YOK çünkü config/tenancy.php'de tanımlı
+            // Merkezi route'lar (127.0.0.1, localhost)
+            // Bu route'larda TENANT middleware'i YOK!
+            foreach ($this->centralDomains() as $domain) {
+                Route::middleware('web')
+                    ->domain($domain)
+                    ->group(base_path('routes/web.php'));
+            }
         });
     }
 
-    protected function configureRateLimiting()
+    /**
+     * Merkezi domain'leri config'den al
+     */
+    protected function centralDomains(): array
+    {
+        return config('tenancy.central_domains', [
+            '127.0.0.1',
+            'localhost',
+        ]);
+    }
+
+    /**
+     * Configure the rate limiters for the application.
+     */
+    protected function configureRateLimiting(): void
     {
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
