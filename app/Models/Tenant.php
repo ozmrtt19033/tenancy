@@ -12,7 +12,9 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     use HasDatabase, HasDomains;
 
     /**
-     * Doldurulabilir alanlar
+     * The attributes that are mass assignable.
+     *
+     * @var array
      */
     protected $fillable = [
         'id',
@@ -20,9 +22,36 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     ];
 
     /**
-     * JSON olarak cast edilecek alanlar
+     * The attributes that should be cast.
+     *
+     * @var array
      */
     protected $casts = [
         'data' => 'array',
     ];
+
+    /**
+     * Tenant veritabanı adını döndür
+     * Örn: tenantacme, tenanttest
+     */
+    public function getTenancyDbNameAttribute(): string
+    {
+        return config('tenancy.database.prefix', 'tenant') . $this->id . config('tenancy.database.suffix', '');
+    }
+
+    /**
+     * Tenant veritabanı kullanıcı adını döndür (MySQL için)
+     */
+    public function getTenancyDbUsernameAttribute(): string
+    {
+        return config('database.connections.mysql.username');
+    }
+
+    /**
+     * Tenant veritabanı şifresini döndür (MySQL için)
+     */
+    public function getTenancyDbPasswordAttribute(): string
+    {
+        return config('database.connections.mysql.password');
+    }
 }

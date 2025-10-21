@@ -1,42 +1,53 @@
 <?php
 
-declare(strict_types=1);
-
 use Illuminate\Support\Facades\Route;
-use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
-use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 
-Route::middleware([
-    'web',
-    InitializeTenancyByDomain::class,
-    PreventAccessFromCentralDomains::class,
-])->group(function () {
+/*
+|--------------------------------------------------------------------------
+| Tenant Routes
+|--------------------------------------------------------------------------
+| Bu route'lar sadece tenant domain'lerinde çalışır
+| Örn: acme.localhost, company1.localhost
+*/
 
-    Route::get('/', function () {
+// AUTH ROUTES (Laravel UI tarafından oluşturulur)
+Auth::routes();
+
+// Ana sayfa - giriş yapmamışsa login'e yönlendir
+Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect()->route('home');
+    }
+    return redirect()->route('login');
+});
+
+// AUTH REQUIRED - Sadece giriş yapmış kullanıcılar erişebilir
+Route::middleware('auth')->group(function () {
+
+    // Dashboard/Home
+    Route::get('/home', function () {
         return view('tenant.dashboard');
-    });
+    })->name('home');
 
+    // Dashboard alternatif route
     Route::get('/dashboard', function () {
         return view('tenant.dashboard');
-    });
+    })->name('dashboard');
 
+    // Kullanıcılar
     Route::get('/users', function () {
-        return view('tenant.users');
-    });
+        $users = \App\Models\User::all();
+        return view('tenant.users', compact('users'));
+    })->name('users.index');
 
+    // Raporlar
     Route::get('/reports', function () {
         return view('tenant.reports');
-    });
+    })->name('reports');
 
+    // Ayarlar
     Route::get('/settings', function () {
         return view('tenant.settings');
-    });
-
-    Route::get('/profile', function () {
-        return view('tenant.profile');
-    });
-
-    Route::get('/test', function () {
-        return 'Tenant: ' . tenant('id') . ' - Working!';
-    });
+    })->name('settings');
 });
+

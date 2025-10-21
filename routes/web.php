@@ -62,3 +62,11 @@ Route::delete('/tenants/{tenant}', function (Tenant $tenant) {
         return back()->withErrors(['error' => $e->getMessage()]);
     }
 })->name('tenants.destroy');
+
+Auth::routes();
+
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
+Auth::routes();
+
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

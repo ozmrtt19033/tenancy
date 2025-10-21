@@ -232,15 +232,21 @@
 
                     <div class="tenant-info">
                         <div class="info-label">📍 Domain</div>
-                        @foreach($tenant->domains as $domain)
-                            <div class="info-value">
-                                <a href="http://{{ $domain->domain }}:8000"
-                                   target="_blank"
-                                   class="domain-link">
-                                    {{ $domain->domain }}
-                                </a>
+                        @if($tenant->domains && $tenant->domains->count() > 0)
+                            @foreach($tenant->domains as $domain)
+                                <div class="info-value">
+                                    <a href="http://{{ $domain->domain }}:8000"
+                                       target="_blank"
+                                       class="domain-link">
+                                        {{ $domain->domain }}
+                                    </a>
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="info-value text-muted">
+                                <small>Domain yok</small>
                             </div>
-                        @endforeach
+                        @endif
                     </div>
 
                     <div class="tenant-info">
@@ -250,16 +256,30 @@
 
                     <div class="tenant-info">
                         <div class="info-label">📅 Oluşturulma</div>
-                        <div class="info-value">{{ $tenant->created_at->format('d.m.Y H:i') }}</div>
+                        <div class="info-value">
+                            @if($tenant->created_at)
+                                {{ $tenant->created_at->format('d.m.Y H:i') }}
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </div>
                     </div>
 
                     <div class="tenant-actions">
-                        <a href="http://{{ $tenant->domains->first()->domain }}:8000"
-                           target="_blank"
-                           class="btn btn-primary"
-                           style="flex: 1; text-align: center;">
-                            Aç →
-                        </a>
+                        @if($tenant->domains && $tenant->domains->count() > 0)
+                            <a href="http://{{ $tenant->domains->first()->domain }}:8000"
+                               target="_blank"
+                               class="btn btn-primary"
+                               style="flex: 1; text-align: center;">
+                                Aç →
+                            </a>
+                        @else
+                            <button class="btn btn-primary"
+                                    style="flex: 1; text-align: center;"
+                                    disabled>
+                                Domain Yok
+                            </button>
+                        @endif
                         <form action="{{ route('tenants.destroy', $tenant) }}"
                               method="POST"
                               onsubmit="return confirm('{{ $tenant->id }} tenant\'ını silmek istediğinize emin misiniz?')">

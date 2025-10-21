@@ -1,230 +1,126 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ tenant('id') }} - Dashboard</title>
+@extends('layouts.app')
+
+@section('content')
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-12">
+                <!-- Hoş Geldin Kartı -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">{{ strtoupper(tenant('id')) }} Dashboard</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5>Hoş geldin, {{ Auth::user()->name }}! 👋</h5>
+                        <p class="text-muted">{{ strtoupper(tenant('id')) }} tenant'ının kontrol paneline hoş geldiniz.</p>
+                    </div>
+                </div>
+
+                <!-- Bilgi Kartları -->
+                <div class="row mb-4">
+                    <!-- Tenant Bilgisi -->
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <i class="fas fa-building fa-3x text-primary"></i>
+                                </div>
+                                <h6 class="text-muted">Tenant ID</h6>
+                                <h4>{{ tenant('id') }}</h4>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Domain Bilgisi -->
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <i class="fas fa-globe fa-3x text-success"></i>
+                                </div>
+                                <h6 class="text-muted">Domain</h6>
+                                <h5>{{ tenant()->domains->first()->domain }}</h5>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kullanıcı Sayısı -->
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <i class="fas fa-users fa-3x text-info"></i>
+                                </div>
+                                <h6 class="text-muted">Toplam Kullanıcı</h6>
+                                <h4>{{ \App\Models\User::count() }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hızlı Erişim -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Hızlı Erişim</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <a href="{{ route('users.index') }}" class="btn btn-outline-primary btn-block py-3">
+                                    <i class="fas fa-users fa-2x mb-2"></i>
+                                    <div>Kullanıcılar</div>
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <a href="{{ route('reports') }}" class="btn btn-outline-success btn-block py-3">
+                                    <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                                    <div>Raporlar</div>
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <a href="{{ route('settings') }}" class="btn btn-outline-warning btn-block py-3">
+                                    <i class="fas fa-cog fa-2x mb-2"></i>
+                                    <div>Ayarlar</div>
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <a href="#" class="btn btn-outline-info btn-block py-3">
+                                    <i class="fas fa-user fa-2x mb-2"></i>
+                                    <div>Profil</div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Database Bilgisi -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Database Bilgisi</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="bg-light p-3 rounded">
+                            <code>
+                                <strong>Database:</strong> {{ tenant()->tenancy_db_name }}<br>
+                                <strong>Oluşturulma:</strong> {{ tenant()->created_at->format('d.m.Y H:i') }}<br>
+                                <strong>Son Güncelleme:</strong> {{ tenant()->updated_at->format('d.m.Y H:i') }}
+                            </code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
+
+@push('styles')
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .navbar {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 15px 30px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .navbar h2 {
-            color: #667eea;
-            font-size: 1.5em;
-        }
-
-        .navbar .tenant-name {
-            background: #667eea;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-        }
-
-        .card-icon {
-            font-size: 3em;
-            margin-bottom: 15px;
-        }
-
-        .card h3 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 1.3em;
-        }
-
-        .card p {
-            color: #666;
-            line-height: 1.6;
-        }
-
-        .info-section {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-
-        .info-section h2 {
-            color: #333;
-            margin-bottom: 20px;
-            border-bottom: 3px solid #667eea;
-            padding-bottom: 10px;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .info-item {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
-        }
-
-        .info-item strong {
-            color: #667eea;
+        .btn-block {
             display: block;
-            margin-bottom: 8px;
-            font-size: 0.9em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            width: 100%;
         }
-
-        .info-item span {
-            color: #333;
-            font-size: 1.1em;
-            word-break: break-all;
-        }
-
-        .badge {
-            display: inline-block;
-            background: #10b981;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            font-weight: 600;
-            margin-top: 10px;
-        }
-
-        .btn {
-            display: inline-block;
-            background: #667eea;
-            color: white;
-            padding: 12px 30px;
-            border-radius: 25px;
-            text-decoration: none;
-            transition: background 0.3s ease;
-            margin-top: 15px;
-        }
-
-        .btn:hover {
-            background: #764ba2;
-        }
-
-        @media (max-width: 768px) {
-            .navbar {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .cards {
-                grid-template-columns: 1fr;
-            }
+        .card {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
     </style>
-</head>
-<body>
-<div class="container">
-    <div class="navbar">
-        <h2>🏢 {{ strtoupper(tenant('id')) }} Dashboard</h2>
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <a href="/profile" style="text-decoration: none; color: #667eea; font-weight: 600;">👤 Profil</a>
-            <div class="tenant-name">{{ tenant('id') }}</div>
-        </div>
-    </div>
-
-    <div class="cards">
-        <div class="card">
-            <div class="card-icon">👥</div>
-            <h3>Kullanıcı Yönetimi</h3>
-            <p>Tenant'ınıza ait kullanıcıları yönetin, yeni kullanıcılar ekleyin ve yetkilendirme yapın.</p>
-            <a href="/users" class="btn">Kullanıcılar</a>
-        </div>
-
-        <div class="card">
-            <div class="card-icon">📊</div>
-            <h3>Raporlar</h3>
-            <p>Detaylı raporlar oluşturun, verileri analiz edin ve performans metriklerini görüntüleyin.</p>
-            <a href="/reports" class="btn">Raporlara Git</a>
-        </div>
-
-        <div class="card">
-            <div class="card-icon">⚙️</div>
-            <h3>Ayarlar</h3>
-            <p>Tenant ayarlarını yapılandırın, tema değiştirin ve sistem tercihlerini düzenleyin.</p>
-            <a href="/settings" class="btn">Ayarlar</a>
-        </div>
-    </div>
-
-    <div class="info-section">
-        <h2>📋 Tenant Bilgileri</h2>
-        <div class="info-grid">
-            <div class="info-item">
-                <strong>Tenant ID</strong>
-                <span>{{ tenant('id') }}</span>
-            </div>
-
-            <div class="info-item">
-                <strong>Domain</strong>
-                <span>{{ tenant()->domains->first()->domain }}</span>
-            </div>
-
-            <div class="info-item">
-                <strong>Veritabanı</strong>
-                <span>{{ tenant()->tenancy_db_name }}</span>
-            </div>
-
-            <div class="info-item">
-                <strong>Oluşturulma Tarihi</strong>
-                <span>{{ tenant()->created_at->format('d.m.Y H:i') }}</span>
-            </div>
-        </div>
-
-        <div style="text-align: center; margin-top: 30px;">
-            <span class="badge">✅ Multi-tenancy Aktif</span>
-        </div>
-    </div>
-</div>
-</body>
-</html>
+@endpush

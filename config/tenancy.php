@@ -39,7 +39,7 @@ return [
      * Database tenancy config. Used by DatabaseTenancyBootstrapper.
      */
     'database' => [
-        'central_connection' => env('DB_CONNECTION', 'central'),
+        'central_connection' => env('DB_CONNECTION', 'mysql'),
 
         /**
          * Connection used as a "template" for the dynamically created tenant database connection.
@@ -62,16 +62,16 @@ return [
             'mysql' => Stancl\Tenancy\TenantDatabaseManagers\MySQLDatabaseManager::class,
             'pgsql' => Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLDatabaseManager::class,
 
-        /**
-         * Use this database manager for MySQL to have a DB user created for each tenant database.
-         * You can customize the grants given to these users by changing the $grants property.
-         */
+            /**
+             * Use this database manager for MySQL to have a DB user created for each tenant database.
+             * You can customize the grants given to these users by changing the $grants property.
+             */
             // 'mysql' => Stancl\Tenancy\TenantDatabaseManagers\PermissionControlledMySQLDatabaseManager::class,
 
-        /**
-         * Disable the pgsql manager above, and enable the one below if you
-         * want to separate tenant DBs by schemas rather than databases.
-         */
+            /**
+             * Disable the pgsql manager above, and enable the one below if you
+             * want to separate tenant DBs by schemas rather than databases.
+             */
             // 'pgsql' => Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLSchemaManager::class, // Separate by schema instead of database
         ],
     ],
@@ -178,17 +178,18 @@ return [
      * enabled. But it may be useful to disable them if you use external
      * storage (e.g. S3 / Dropbox) or have a custom asset controller.
      */
-//    'routes' => true,
-    'routes' => [
-        'path' => base_path('routes/tenant.php'),
-        'namespace' => null,
-        'name_prefix' => null,
-        'middleware' => [
-            'web',
-            \Stancl\Tenancy\Middleware\InitializeTenancyByDomain::class,
-            \Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains::class,
-        ],
-    ],
+    'routes' => false,
+
+//    'routes' => [
+//        'path' => base_path('routes/tenant.php'),
+//        'namespace' => null,
+//        'name_prefix' => null,
+//        'middleware' => [
+//            'web',  // ← web middleware grubu (session, csrf, cookies dahil)
+//            \Stancl\Tenancy\Middleware\InitializeTenancyByDomain::class,
+//            \Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains::class,
+//        ],
+//    ],
 
     /**
      * Parameters used by the tenants:migrate command.

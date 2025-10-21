@@ -13,33 +13,38 @@ class RouteServiceProvider extends ServiceProvider
     /**
      * The path to the "home" route for your application.
      */
-    public const HOME = '/';
+    public const HOME = '/home';
 
     /**
      * Define your route model bindings, pattern filters, and other route configuration.
+     *
+     * @return void
      */
-    public function boot(): void
+    public function boot()
     {
         $this->configureRateLimiting();
 
         $this->routes(function () {
             // API routes
-            Route::middleware('api')
-                ->prefix('api')
+            Route::prefix('api')
+                ->middleware('api')
                 ->group(base_path('routes/api.php'));
 
-            // Merkezi route'lar (127.0.0.1, localhost)
-            // Bu route'larda TENANT middleware'i YOK!
+            // Merkezi routes (127.0.0.1, localhost)
             foreach ($this->centralDomains() as $domain) {
                 Route::middleware('web')
                     ->domain($domain)
                     ->group(base_path('routes/web.php'));
             }
+
+            // TENANT ROUTES - Manuel yükleme
+            // config/tenancy.php'deki otomatik yüklemeyi devre dışı bırakıp
+            // burada manuel yükleyeceğiz
         });
     }
 
     /**
-     * Merkezi domain'leri config'den al
+     * Merkezi domain'leri al
      */
     protected function centralDomains(): array
     {
@@ -51,8 +56,10 @@ class RouteServiceProvider extends ServiceProvider
 
     /**
      * Configure the rate limiters for the application.
+     *
+     * @return void
      */
-    protected function configureRateLimiting(): void
+    protected function configureRateLimiting()
     {
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
