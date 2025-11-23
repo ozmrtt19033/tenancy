@@ -7,7 +7,7 @@ use App\Models\Tenant;
 |--------------------------------------------------------------------------
 | Merkezi Web Routes
 |--------------------------------------------------------------------------
-| Bu route'lar tenant olmadan çalışır (127.0.0.1:8000)
+| Bu route'lar tenant olmadan çalışır (127.0.0.1:8004)
 */
 
 // Ana sayfa
@@ -63,10 +63,5 @@ Route::delete('/tenants/{tenant}', function (Tenant $tenant) {
     }
 })->name('tenants.destroy');
 
-Auth::routes();
-
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-
-Auth::routes();
-
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+// Auth routes (merkezi uygulama için - opsiyonel)
+// Auth::routes();

@@ -42,23 +42,8 @@ class TenancyServiceProvider extends ServiceProvider
      */
     protected function bootEvents()
     {
-        // Tenant oluşturulduğunda otomatik database oluştur
-        Event::listen(
-            Events\TenantCreated::class,
-            Jobs\CreateDatabase::class
-        );
-
-        // Tenant oluşturulduğunda otomatik migration çalıştır
-        Event::listen(
-            Events\TenantCreated::class,
-            Jobs\MigrateDatabase::class
-        );
-
-        // Tenant silindiğinde database'i de sil
-        Event::listen(
-            Events\TenantDeleted::class,
-            Jobs\DeleteDatabase::class
-        );
+        // Event listener'ları kaldırdık - tenant oluşturma işlemi komut içinde manuel yapılıyor
+        // Çünkü Job'lar queue gerektiriyor ve sync çalışması için komut içinde çağrılıyor
     }
 
     /**
@@ -72,7 +57,6 @@ class TenancyServiceProvider extends ServiceProvider
                 'web',
                 InitializeTenancyByDomain::class,
                 PreventAccessFromCentralDomains::class,
-                'switch.tenant.db',  // ← BUNU EKLE (EN SONA!)
             ])
                 ->group(base_path('routes/tenant.php'));
         }

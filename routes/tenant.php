@@ -39,6 +39,11 @@ Route::middleware('auth')->group(function () {
         $users = \App\Models\User::all();
         return view('tenant.users', compact('users'));
     })->name('users.index');
+    
+    // Kullanıcı düzenleme
+    Route::get('/users/{user}/edit', [App\Http\Controllers\UserController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{user}', [App\Http\Controllers\UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [App\Http\Controllers\UserController::class, 'destroy'])->name('users.destroy');
 
     // Raporlar
     Route::get('/reports', function () {

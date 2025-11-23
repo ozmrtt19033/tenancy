@@ -29,15 +29,31 @@ class CreateTenant extends Command
             ]);
 
             $this->info("✓ Domain added: {$domain}");
-            $this->info("✓ Database: tenant{$name}");
+            
+            // Database oluştur
+            $tenant->database()->makeCredentials();
+            $tenant->database()->manager()->createDatabase($tenant);
+            $this->info("✓ Database created: tenant{$name}");
+            
+            // Migration çalıştır - tenant context'inde
+            $tenant->run(function () {
+                \Artisan::call('migrate', [
+                    '--path' => 'database/migrations/tenant',
+                    '--force' => true,
+                ]);
+            });
+            $this->info("✓ Migrations completed");
 
             $this->newLine();
             $this->info("🎉 Tenant successfully created!");
-            $this->info("🌐 Access at: http://{$domain}:8000");
+            $port = env('APP_PORT', '8004');
+            $this->info("🌐 Access at: http://{$domain}:{$port}");
+            $this->info("💡 Don't forget to add '127.0.0.1 {$domain}' to your hosts file!");
 
             return Command::SUCCESS;
         } catch (\Exception $e) {
             $this->error("❌ Failed to create tenant: " . $e->getMessage());
+            $this->error("Stack trace: " . $e->getTraceAsString());
             return Command::FAILURE;
         }
     }

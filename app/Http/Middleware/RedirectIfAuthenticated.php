@@ -19,6 +19,12 @@ class RedirectIfAuthenticated
      */
     public function handle(Request $request, Closure $next, ...$guards)
     {
+        // Merkezi domain'de Auth::check() çağrısını engelle
+        if (!tenancy()->initialized) {
+            // Merkezi domain'deyiz, auth kontrolü yapma
+            return $next($request);
+        }
+
         $guards = empty($guards) ? [null] : $guards;
 
         foreach ($guards as $guard) {

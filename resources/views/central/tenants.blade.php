@@ -235,7 +235,7 @@
                         @if($tenant->domains && $tenant->domains->count() > 0)
                             @foreach($tenant->domains as $domain)
                                 <div class="info-value">
-                                    <a href="http://{{ $domain->domain }}:8000"
+                                    <a href="http://{{ $domain->domain }}:8004"
                                        target="_blank"
                                        class="domain-link">
                                         {{ $domain->domain }}
@@ -267,7 +267,7 @@
 
                     <div class="tenant-actions">
                         @if($tenant->domains && $tenant->domains->count() > 0)
-                            <a href="http://{{ $tenant->domains->first()->domain }}:8000"
+                            <a href="http://{{ $tenant->domains->first()->domain }}:8004"
                                target="_blank"
                                class="btn btn-primary"
                                style="flex: 1; text-align: center;">

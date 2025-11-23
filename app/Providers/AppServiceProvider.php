@@ -21,5 +21,15 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(191);
+        
+        // Tenant context'inde session cookie domain'ini tenant domain'ine göre ayarla
+        if (tenancy()->initialized) {
+            $tenant = tenant();
+            if ($tenant && $tenant->domains->isNotEmpty()) {
+                $domain = $tenant->domains->first()->domain;
+                config(['session.domain' => $domain]);
+                config(['session.cookie' => 'laravel_session_' . $tenant->id]);
+            }
+        }
     }
 }
