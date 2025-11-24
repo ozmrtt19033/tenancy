@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 
 class User extends Authenticatable
 {
@@ -66,6 +67,10 @@ class User extends Authenticatable
      */
     public function getConnection()
     {
+        // Static cache - aynı request içinde tekrar çağrılmaması için
+        static $cachedConnection = null;
+        static $cachedTenantId = null;
+        
         // Önce tenant() helper'ını dene
         $tenantId = null;
         if (function_exists('tenant')) {
@@ -76,6 +81,7 @@ class User extends Authenticatable
                 }
             } catch (\Exception $e) {
                 // Tenant helper hatası, domain'den bulacağız
+                \Log::error('User getConnection - tenant() helper error: ' . $e->getMessage());
             }
         }
         
@@ -89,19 +95,30 @@ class User extends Authenticatable
                     
                     // Eğer merkezi domain değilse, domain'den tenant'ı bul
                     if (!in_array($host, $centralDomains)) {
-                        // Domain'den tenant'ı bul
-                        $domain = \App\Models\Tenant::whereHas('domains', function($query) use ($host) {
-                            $query->where('domain', $host);
-                        })->first();
-                        
-                        if ($domain) {
-                            $tenantId = $domain->id;
+                        // Merkezi veritabanından tenant'ı bul (connection kullanmadan)
+                        try {
+                            $domain = DB::connection('mysql')
+                                ->table('domains')
+                                ->where('domain', $host)
+                                ->first();
+                            
+                            if ($domain) {
+                                $tenantId = $domain->tenant_id;
+                            }
+                        } catch (\Exception $e) {
+                            \Log::error('User getConnection - domain lookup error: ' . $e->getMessage());
                         }
                     }
                 }
             } catch (\Exception $e) {
-                // Hata durumunda
+                \Log::error('User getConnection - request error: ' . $e->getMessage());
             }
+        }
+        
+        // Cache kontrolü - aynı tenant ID için cache'lenmiş connection varsa onu kullan
+        if ($tenantId && $cachedTenantId === $tenantId && $cachedConnection) {
+            $this->connection = $cachedConnection->getName();
+            return $cachedConnection;
         }
         
         // Tenant ID bulunduysa, connection oluştur
@@ -109,31 +126,53 @@ class User extends Authenticatable
             $dbName = 'tenant' . $tenantId;
             $connectionName = 'tenant_' . $tenantId;
             
-            // Eğer bu connection daha önce oluşturulmamışsa, oluştur
-            $connections = Config::get('database.connections', []);
-            if (!isset($connections[$connectionName])) {
-                Config::set('database.connections.' . $connectionName, [
-                    'driver' => 'mysql',
-                    'host' => env('DB_HOST', '127.0.0.1'),
-                    'port' => env('DB_PORT', '3306'),
-                    'database' => $dbName,
-                    'username' => env('DB_USERNAME', 'root'),
-                    'password' => env('DB_PASSWORD', ''),
-                    'charset' => 'utf8mb4',
-                    'collation' => 'utf8mb4_unicode_ci',
-                    'prefix' => '',
-                    'strict' => true,
-                    'engine' => null,
-                ]);
+            try {
+                // Eğer bu connection daha önce oluşturulmamışsa, oluştur
+                $connections = Config::get('database.connections', []);
+                if (!isset($connections[$connectionName])) {
+                    Config::set('database.connections.' . $connectionName, [
+                        'driver' => 'mysql',
+                        'host' => env('DB_HOST', '127.0.0.1'),
+                        'port' => env('DB_PORT', '3306'),
+                        'database' => $dbName,
+                        'username' => env('DB_USERNAME', 'root'),
+                        'password' => env('DB_PASSWORD', ''),
+                        'charset' => 'utf8mb4',
+                        'collation' => 'utf8mb4_unicode_ci',
+                        'prefix' => '',
+                        'strict' => true,
+                        'engine' => null,
+                    ]);
+                    
+                    // Connection'ı yeniden yükle
+                    DB::purge($connectionName);
+                }
                 
-                // Connection'ı yeniden yükle
-                DB::purge($connectionName);
+                // Connection'ı al
+                $connection = DB::connection($connectionName);
+                
+                // Cache'le
+                $cachedConnection = $connection;
+                $cachedTenantId = $tenantId;
+                
+                // Bu connection'ı kullan
+                $this->connection = $connectionName;
+                
+                return $connection;
+            } catch (\Exception $e) {
+                \Log::error('User getConnection - connection creation error: ' . $e->getMessage());
+                \Log::error('User getConnection - Stack trace: ' . $e->getTraceAsString());
+                
+                // Hata durumunda merkezi domain hatası ver
+                $pdoException = new \PDOException("Failed to connect to tenant database: " . $e->getMessage());
+                $pdoException->errorInfo = ['42S02', 1146, "Table 'tenancy_central.users' doesn't exist"];
+                
+                throw new \Illuminate\Database\QueryException(
+                    'select * from `users`',
+                    [],
+                    $pdoException
+                );
             }
-            
-            // Bu connection'ı kullan
-            $this->connection = $connectionName;
-            
-            return DB::connection($connectionName);
         }
         
         // Tenant yoksa (merkezi domain), hata ver
