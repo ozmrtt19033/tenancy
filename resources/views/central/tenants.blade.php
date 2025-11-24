@@ -202,13 +202,13 @@
     <div class="header">
         <h1>🏢 Tenant Listesi</h1>
         <div style="display: flex; gap: 10px;">
-            <a href="{{ route('home') }}" class="btn btn-back">← Geri</a>
+            <a href="{{ url('/') }}" class="btn btn-back">← Geri</a>
             <a href="{{ route('tenants.create') }}" class="btn btn-primary">+ Yeni Tenant</a>
         </div>
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success">
+        <div class="alert alert-success" style="white-space: pre-line;">
             <span>✓</span>
             <span>{{ session('success') }}</span>
         </div>
